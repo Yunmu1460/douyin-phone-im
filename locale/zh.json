@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "douyin-phone-im",
+    "description": "用 ADB 驱动真实安卓手机读写抖音私信：无障碍树定位 + ADB IME 中文输入，带每日额度与复读拦截",
+    "detail": "docs/DETAIL.md"
+  }
+}
