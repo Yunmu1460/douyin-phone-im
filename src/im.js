@@ -85,7 +85,20 @@ async function ensureImTab() {
   if (nodes.some((n) => n.text === '消息') && nodes.some((n) => /暂时没有更多|互动消息|陌生人消息|等 \d+ 人/.test(n.text))) return nodes;
   await sh('input keyevent 3'); await sleep(800);
   await sh('am start -n com.ss.android.ugc.aweme/com.ss.android.ugc.aweme.main.MainActivity'); await sleep(5000);
-  await sh('input tap 756 2230'); await sleep(3500);   // 底部「消息」tab
+  // 底部「消息」tab：tab 文字节点 bounds 全是 [0,0]（MeasureOnce 布局优化），不能按文本定位。
+  // 用 content-desc=拍摄，按钮（真实 bounds）做锚点：5 槽等宽，消息 = 拍摄右邻槽中心。
+  const { nodes: tabNodes } = await dumpTexts();
+  const shoot = tabNodes.find((n) => n.text === '拍摄，按钮');
+  let msgTap = null;
+  if (shoot) {
+    const m = /\[(\d+),(\d+)\]\[(\d+),(\d+)\]/.exec(shoot.bounds);
+    if (m) {
+      const w = Number(m[3]) - Number(m[1]);
+      msgTap = { x: Number(m[3]) + (w >> 1), y: (Number(m[2]) + Number(m[4])) >> 1 };
+    }
+  }
+  if (!msgTap) msgTap = { x: 756, y: 2230 };  // 回落旧坐标
+  await sh(`input tap ${msgTap.x} ${msgTap.y}`); await sleep(3500);   // 底部「消息」tab
   return (await dumpTexts()).nodes;
 }
 
