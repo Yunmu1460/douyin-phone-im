@@ -70,6 +70,14 @@ await phoneImSend({ name: '张三', text: '你好', confirm: true });
 - 短时间高频私信会触发抖音风控——这个库不替你做风控对策，请自律；
 - 只跟**已有会话**的人聊，`phoneImList` 里标「（新关注/互动）」的新会话建议先人工看一眼再回。
 
+## 作为 DSH 插件使用
+
+本仓库同时是一个可直接安装的 DeepSeek Harness 插件（`package.json` 声明了 `dsh.bundle`）：
+
+- 安装后自动注册两个 agent 工具：`phone__im_read`（读会话/读记录）和 `phone__im_send`（回复私信）；
+- `phone__im_send` 内置完整发送闸：必须 `confirm: true`、单条 ≤100 字、单会话每天 2 条 / 全部私信每天 6 条、两次发送间隔 ≥30 分钟、复读拦截（整句重复 + bigram 相似度 ≥0.7 / 最长公共子串 ≥14 都拦）；
+- 闸的阈值都能在 DSH 插件页的配置里改；额度账本 `im-streak.json` 与发送留底 `im-sent.jsonl` 落在数据目录（`DOUYIN_IM_DATA_DIR`，默认插件目录下 `data/`）。
+
 ## License
 
 MIT
