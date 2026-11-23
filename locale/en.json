@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "douyin-phone-im",
+    "description": "Read and reply to Douyin (TikTok CN) direct messages on a real Android phone over ADB, with per-day and anti-repeat sending gates",
+    "detail": "docs/DETAIL.md"
+  }
+}
