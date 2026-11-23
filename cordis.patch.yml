@@ -1,0 +1,10 @@
+- insert:
+    - id: douyin-phone-im
+      name: douyin-phone-im
+      config:
+        maxPerDay: 6
+        maxPerContact: 2
+        minIntervalMin: 30
+        maxTextLen: 100
+        repeatSim: 0.7
+        repeatLcs: 14
