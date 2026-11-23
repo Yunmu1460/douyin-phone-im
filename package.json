@@ -1,0 +1,13 @@
+{
+  "name": "douyin-phone-im",
+  "version": "1.0.0",
+  "description": "抖音手机端私信自动化：无障碍树定位 + ADB IME 中文输入 + 发送留底（零依赖 Node.js）",
+  "type": "module",
+  "main": "src/im.js",
+  "scripts": {
+    "demo": "node example/basic.js"
+  },
+  "keywords": ["douyin", "tiktok", "adb", "uiautomator", "im", "automation"],
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}
