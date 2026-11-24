@@ -43,7 +43,10 @@ function saveStreak(sk) {
   const dir = homeDir();
   try {
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'im-streak.json'), JSON.stringify(sk), 'utf8');
+    // 原子写：tmp + rename（学自 dsh-workbuddy writeStore），进程中途死也不留半截 JSON
+    const p = path.join(dir, 'im-streak.json');
+    fs.writeFileSync(p + '.' + process.pid + '.tmp', JSON.stringify(sk), { encoding: 'utf8', mode: 0o600 });
+    fs.renameSync(p + '.' + process.pid + '.tmp', p);
   } catch { /* 账本写失败不阻断返回 */ }
 }
 
