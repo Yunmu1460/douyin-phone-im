@@ -81,6 +81,34 @@ function sentHistory(name) {
   }
 }
 
+// —— 错误分级冷却（学自 dsh-workbuddy：别拿固定间隔硬扛两类不同的错）——
+// 手机不在/ADB 断：长冷却（30 分钟），防止她「手机不在也硬试」刷屏；
+// 其他错误（超时/偶发）：短冷却（2 分钟）。冷却期内直接拦，不碰 ADB。
+const COOL_LONG_MS = 30 * 60 * 1000;
+const COOL_SHORT_MS = 2 * 60 * 1000;
+let coolUntil = 0;
+let coolReason = '';
+
+function classifyError(msg) {
+  const s = String(msg || '');
+  if (/设备|device|offline|adb|没有.*在线|no devices/i.test(s)) return 'long';
+  return 'short';
+}
+
+function coolGate() {
+  if (Date.now() < coolUntil) {
+    const left = Math.ceil((coolUntil - Date.now()) / 60000);
+    return '手机通道刚挂过（' + coolReason + '），先等 ' + left + ' 分钟再试——反复硬试只会一直失败。';
+  }
+  return null;
+}
+
+function coolMark(msg) {
+  const cls = classifyError(msg);
+  coolUntil = Date.now() + (cls === 'long' ? COOL_LONG_MS : COOL_SHORT_MS);
+  coolReason = String(msg || '出错').slice(0, 40);
+}
+
 function repeatCheck(text, name, cfg) {
   const ntNew = normTxt(text);
   for (const prev of sentHistory(name)) {
@@ -118,13 +146,17 @@ export function apply(ctx, config) {
         },
       },
       async execute(args) {
+        const cg = coolGate();
+        if (cg) return { content: 'status: blocked\n' + cg, isError: true };
         try {
           const pim = await lazyIm();
           const r = args && args.name
             ? await pim.phoneImRead({ name: String(args.name) })
             : await pim.phoneImList();
+          if (!r.ok) coolMark(r.note);
           return { content: `status: ${r.ok ? 'ok' : 'error'}\n${r.note}`, isError: !r.ok };
         } catch (e) {
+          coolMark(e && e.message);
           return { content: 'status: error\n手机私信读取挂了：' + ((e && e.message) || e), isError: true };
         }
       },
@@ -165,9 +197,12 @@ export function apply(ctx, config) {
         const rep = repeatCheck(text, nm, cfg);
         if (rep) return { content: 'status: blocked\n' + rep, isError: true };
 
+        const cg = coolGate();
+        if (cg) return { content: 'status: blocked\n' + cg, isError: true };
         try {
           const pim = await lazyIm();
           const r = await pim.phoneImSend({ name: nm, text, confirm: true });
+          if (!r.ok) coolMark(r.note);
           if (r.ok) {
             const sk2 = loadStreak(today);
             sk2.c[nm] = (sk2.c[nm] || 0) + 1;
@@ -177,6 +212,7 @@ export function apply(ctx, config) {
           }
           return { content: `status: ${r.ok ? 'ok' : 'error'}\n${r.note}`, isError: !r.ok };
         } catch (e) {
+          coolMark(e && e.message);
           return { content: 'status: error\n手机私信发送挂了：' + ((e && e.message) || e), isError: true };
         }
       },
